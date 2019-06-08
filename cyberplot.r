@@ -4,7 +4,7 @@ library("jsonlite")
 
 DEFAULT_URL <- "127.0.0.1"
 PORT <- "5000"
-UPLOAD_PATH <- "/api/upload/"
+UPLOAD_PATH <- "/api/dataset_upload/"
 
 cyberplot.new <- function(dataTable, id, name, serverUrl = NULL) {
     dataTableTemp <- dataTable
@@ -22,7 +22,7 @@ cyberplot.new <- function(dataTable, id, name, serverUrl = NULL) {
     usedUrl <- paste(usedUrl, PORT, sep = ":")
     usedUrl <- paste(usedUrl, UPLOAD_PATH, sep = "")
 
-    metadata <- list(json = list(name = name, identifier = id))
+    metadata <- list(json = list(name = name, identifier = id, containsHeader = 1))
     metadataJson <- jsonlite::toJSON(metadata, pretty = TRUE, auto_unbox = TRUE)
 
     req <- POST(usedUrl,

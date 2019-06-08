@@ -40,7 +40,7 @@ cyberplot.new <- function(dataTable, id, name, serverUrl = NULL) {
         print("Dataset uploaded.")
     }
     else {
-        print("General upload error.")
+        print(content(req, as="parsed")["result"])
     }
 }
 

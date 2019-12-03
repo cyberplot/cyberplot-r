@@ -6,32 +6,42 @@ DEFAULT_URL <- "127.0.0.1"
 PORT <- "5000"
 UPLOAD_PATH <- "/api/dataset_upload/"
 
-cyberplot.new <- function(dataTable, id, name, serverUrl) {
+cyberplot.new <- function(dataTable, id, name, serverUrl, matrix = FALSE) {
     if(missing(name)) {
         print("Please specify dataset name.")
     }
 
-    cyberplot.__upload(dataTable, id, name, serverUrl, 0)
+    cyberplot.__upload(dataTable, id, name, serverUrl, 0, matrix)
 }
 
-cyberplot.update <- function(dataTable, id, serverUrl) {
-    cyberplot.__upload(dataTable, id, NULL, serverUrl, 1)
+cyberplot.update <- function(dataTable, id, serverUrl, matrix = FALSE) {
+    cyberplot.__upload(dataTable, id, NULL, serverUrl, 1, matrix)
 }
 
-cyberplot.__upload <- function(dataTable, id, name, serverUrl, updating) {
+cyberplot.__upload <- function(dataTable, id, name, serverUrl, updating, matrix) {
     if(missing(id)) {
         print("Please specify identifier.")
         return
     }
 
     dataTableTemp <- dataTable
-
-    # if data table contains row labels, populate a new column with them
-    if(rownames(dataTable)[1] != 1) {
-        dataTableTemp$Label <- rownames(dataTable)
-        dataTableTemp <- dataTableTemp[, c(ncol(dataTableTemp), 1:(ncol(dataTableTemp) - 1))]
+    
+    datasetType <- "multivariate"
+    containsHeader <- 1
+    if(matrix) {
+        datasetType <- "matrix"
+        colnames(dataTableTemp) <- NULL
+        containsHeader <- 0
+    }
+    else {
+        # if data table contains row labels, populate a new column with them
+        if(rownames(dataTable)[1] != 1) {
+            dataTableTemp$Label <- rownames(dataTable)
+        }
     }
 
+    dataTableTemp <- dataTableTemp[, c(ncol(dataTableTemp), 1:(ncol(dataTableTemp) - 1))]
+    
     dataFile <- tempfile("data")
     fwrite(dataTableTemp, dataFile)
 
@@ -39,7 +49,7 @@ cyberplot.__upload <- function(dataTable, id, name, serverUrl, updating) {
     usedUrl <- paste(usedUrl, PORT, sep = ":")
     usedUrl <- paste(usedUrl, UPLOAD_PATH, sep = "")
 
-    metadata <- list(json = list(name = name, identifier = id, containsHeader = 1, updating = updating))
+    metadata <- list(json = list(name = name, type = datasetType, identifier = id, containsHeader = containsHeader, updating = updating))
     metadataJson <- jsonlite::toJSON(metadata, pretty = TRUE, auto_unbox = TRUE)
 
     req <- POST(usedUrl,
